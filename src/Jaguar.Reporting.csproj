@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Carlos Jesús Huchim Ahumada</Authors>
+    <Company>Jaguar</Company>
+    <Description>Permite generar reportes en base a plantillas.</Description>
+    <Copyright>Carlos Jesús Huchim Ahumada</Copyright>
+    <PackageTags>reporting</PackageTags>
+    <PackageReleaseNotes>Beta</PackageReleaseNotes>
+    <Version>1.0.0-b</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="1.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" />
+    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+  </ItemGroup>
+</Project>
