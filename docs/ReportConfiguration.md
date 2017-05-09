@@ -1,3 +1,3 @@
-# Configuración del reporte.
+# ConfiguraciÃ³n del reporte.
 
 https://raw.githubusercontent.com/huchim/schemas/master/Reports/reports.schema.json
