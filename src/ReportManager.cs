@@ -3,13 +3,12 @@
 // Este código se libera bajo los términos de licencia especificados.
 // </copyright>
 // -----------------------------------------------------------------------
-namespace Cfe.Cefag.Reports
+namespace Jaguar.Reporting
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using Jaguar.Reporting;
     using Jaguar.Reporting.Common;
     using Jaguar.Reporting.Generators;
     using SystemData = System.Data;
