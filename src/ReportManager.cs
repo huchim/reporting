@@ -56,6 +56,15 @@ namespace Jaguar.Reporting
         public Dictionary<string, object> Variables { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
+        /// Agrega una lista de variables predeterminadas para los reportes.
+        /// </summary>
+        public void AddDefaultVariables()
+        {
+            // Agregar variables calculadas.
+            this.Variables.Add("system.now", DateTime.Now);
+        }
+
+        /// <summary>
         /// Agrega un nuevo generador de reportes a la colección.
         /// </summary>
         /// <param name="generator">Generador de reportes.</param>
@@ -80,12 +89,12 @@ namespace Jaguar.Reporting
         }
 
         /// <summary>
-        /// Agrega una lista de variables predeterminadas para los reportes.
+        /// Obtiene la lista de generadores disponibles.
         /// </summary>
-        public void AddDefaultVariables()
+        /// <returns>Lista de generadores disponibles.</returns>
+        public List<IGeneratorEngine> GetGenerators()
         {
-            // Agregar variables calculadas.
-            this.Variables.Add("system.now", DateTime.Now);
+            return this.generators;
         }
 
         /// <summary>
@@ -295,15 +304,6 @@ namespace Jaguar.Reporting
             }
 
             return dataTable;
-        }
-
-        /// <summary>
-        /// Obtiene la lista de generadores disponibles.
-        /// </summary>
-        /// <returns>Lista de generadores disponibles.</returns>
-        private List<IGeneratorEngine> GetGenerators()
-        {
-            return this.generators;
         }
 
         /// <summary>
