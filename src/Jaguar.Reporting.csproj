@@ -9,7 +9,7 @@
     <Copyright>Carlos Jesús Huchim Ahumada</Copyright>
     <PackageTags>reporting</PackageTags>
     <PackageReleaseNotes>Beta</PackageReleaseNotes>
-    <Version>1.0.0-beta.1</Version>
+    <Version>1.0.0-beta</Version>
   </PropertyGroup>
   <ItemGroup>
     <AdditionalFiles Include="stylecop.json" />
