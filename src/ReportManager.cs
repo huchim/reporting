@@ -98,6 +98,44 @@ namespace Jaguar.Reporting
         }
 
         /// <summary>
+        /// Configura un reporte como el reporte activo e inicializa los argumentos.
+        /// </summary>
+        /// <param name="report">Información del reporte.</param>
+        /// <param name="arguments">Inicializa los argumentos con los valores.</param>
+        public void Open(ReportHandler report, Dictionary<string, object> arguments)
+        {
+            // Agregar las variables de la consulta.
+            foreach (var arg in report.ArgumentList)
+            {
+                if (arguments.ContainsKey(arg.Name))
+                {
+                    // Si existe el argumento en la colección, debo hacer dos cosas.
+                    // La primera es agregarle su valor.
+                    var value = arguments[arg.Name];
+
+                    if (value is string)
+                    {
+                        // Intentar convertir su valor de acuerdo al tipo de argumento.
+                        arg.TryCastValue(value);
+                    }
+                    else
+                    {
+                        // En caso contrario asignar el que se ha proveído por el usuario.
+                        arg.Value = value;
+                    }
+
+                    // Lo segundo, es registrar la variable en la lista de variables para
+                    // que si algún sustitución por token lo requiera, la pueda encontrar.
+                    this.Variables.Add($"args.{arg.Name}", value);
+                }
+            }
+
+            // Transferir el control a la función principal para continuar la apertura
+            // del reporte.
+            this.Open(report);
+        }
+
+        /// <summary>
         /// Configura un reporte como el reporte activo a procesar y las variables del reporte.
         /// </summary>
         /// <param name="report">Información del reporte.</param>
