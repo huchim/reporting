@@ -1,8 +1,9 @@
 # Reportes
 
+[![Visual Studio Team services](https://img.shields.io/vso/build/huchim/7265cf4b-20e4-4e28-b5a9-6be685fc92e5/4.svg)]()
+[![NuGet Pre Release](https://img.shields.io/nuget/v/Jaguar.Reporting.svg?style=flat-square)]()
+[![NuGet Pre Release](https://img.shields.io/nuget/vpre/Jaguar.Reporting.svg?style=flat-square)]()
 
-
-![Resultado de la compilación TFS](https://huchim.visualstudio.com/_apis/public/build/definitions/7265cf4b-20e4-4e28-b5a9-6be685fc92e5/4/badge)
 
 Este repositorio contiene una biblioteca que ayuda a crear reportes en base a una serie
 de formatos disponibles (implementen `IGenerator`).
