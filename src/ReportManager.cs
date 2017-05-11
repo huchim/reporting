@@ -198,10 +198,10 @@ namespace Jaguar.Reporting
         /// <returns>Resultado de la operación.</returns>
         public ReportResults Process(Guid type)
         {
+            var generator = this.generators.Single(x => x.Id == type);
+
             // Obtener los datos de la base de datos.
             var data = this.GenerateData();
-
-            var generator = this.generators.Single(x => x.Id == type);
 
             return new ReportResults
             {

@@ -6,7 +6,6 @@
 namespace Jaguar.Reporting
 {
     using System;
-    using Microsoft.Extensions.Primitives;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -74,7 +73,7 @@ namespace Jaguar.Reporting
         /// <param name="value">Valor del argumento.</param>
         public void TryCastValue(object value)
         {
-            var isString = value is string || value is StringValues;
+            var isString = value is string;
 
             // Unificar el valor resultante.
             if (value == DBNull.Value)
