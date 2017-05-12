@@ -74,6 +74,27 @@ namespace Jaguar.Reporting
         }
 
         /// <summary>
+        /// Genera los datos a utilizar por el reporte.
+        /// </summary>
+        /// <returns>Conjunto de tablas resultado del reporte.</returns>
+        public List<DataTable> GenerateData()
+        {
+            // Los datos se van almacenando en una lista de filas (Dictionary<string, object>)
+            var data = new List<DataTable>();
+
+            foreach (var m in this.ActiveReport.Sql)
+            {
+                // Recuperar la lista de argumentos requeridos.
+                var requiredArguments = this.ActiveReport.ArgumentList.Where(x => m.RequiredArguments.Contains(x.Name)).ToArray();
+
+                // Ejecutar la consulta y agregar a la coleción de resultados.
+                data.Add(this.GetDataTable(m.Name, m.Script, requiredArguments));
+            }
+
+            return data;
+        }
+
+        /// <summary>
         /// Devuelve el resultado de la operación de acuerdo al tipo de reporte.
         /// </summary>
         /// <param name="type">Identificador del tipo de generador.</param>
@@ -248,6 +269,24 @@ namespace Jaguar.Reporting
                 Data = generator.GetAllBytes(this.ActiveReport, data, this.Variables),
             };
         }
+        
+        /// <summary>
+        /// Devuelve el resultado de la operación de acuerdo al tipo de reporte e incluye información sobre el archivo.
+        /// </summary>
+        /// <param name="type">Identificador del tipo de generador.</param>
+        /// <param name="data">Resultados a insertar en el reporte.</param>
+        /// <returns>Resultado de la operación.</returns>
+        public ReportResults Process(Guid type, List<DataTable> data)
+        {
+            var generator = this.generators.Single(x => x.Id == type);
+
+            return new ReportResults
+            {
+                FileExtension = generator.FileExtension,
+                MimeType = generator.MimeType,
+                Data = generator.GetAllBytes(this.ActiveReport, data, this.Variables),
+            };
+        }
 
         private void CheckConnection()
         {
@@ -269,24 +308,6 @@ namespace Jaguar.Reporting
                 this.Variables.Add(name, value);
             }
         }
-
-        private List<DataTable> GenerateData()
-        {
-            // Los datos se van almacenando en una lista de filas (Dictionary<string, object>)
-            var data = new List<DataTable>();
-
-            foreach (var m in this.ActiveReport.Sql)
-            {
-                // Recuperar la lista de argumentos requeridos.
-                var requiredArguments = this.ActiveReport.ArgumentList.Where(x => m.RequiredArguments.Contains(x.Name)).ToArray();
-
-                // Ejecutar la consulta y agregar a la coleción de resultados.
-                data.Add(this.GetDataTable(m.Name, m.Script, requiredArguments));
-            }
-
-            return data;
-        }
-
         private DataTable GetDataTable(string tableName, string sql, ReportArgumentItem[] reportArguments)
         {
             // Asegurarse que la conexión está abierta y se puede ejecutar la consulta.
