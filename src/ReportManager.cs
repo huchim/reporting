@@ -269,6 +269,21 @@ namespace Jaguar.Reporting
                 Data = generator.GetAllBytes(this.ActiveReport, data, this.Variables),
             };
         }
+
+        /// <summary>
+        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
+        /// </summary>
+        /// <param name="type">Identificador del tipo de generador.</param>
+        /// <returns>Secuencia de los resultados del reporte.</returns>
+        public string GetString(Guid type)
+        {
+            var generator = this.generators.Single(x => x.Id == type);
+
+            // Obtener los datos de la base de datos.
+            var data = this.GenerateData();
+
+            return generator.GetString(this.ActiveReport, data, this.Variables);
+        }
         
         /// <summary>
         /// Devuelve el resultado de la operación de acuerdo al tipo de reporte e incluye información sobre el archivo.
