@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFrameworks>net40;netcoreapp1.1</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Carlos Jesús Huchim Ahumada</Authors>
     <Company>Jaguar</Company>
@@ -9,25 +9,26 @@
     <Copyright>Carlos Jesús Huchim Ahumada</Copyright>
     <PackageTags>reporting</PackageTags>
     <PackageReleaseNotes>Beta</PackageReleaseNotes>
-    <Version>1.0.0-beta6</Version>
+    <Version>1.0.0-beta7</Version>
     <PackageProjectUrl>https://github.com/huchim/reporting</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/huchim/reporting/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/huchim/reporting</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile></DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)' == 'netcoreapp1.1' ">
     <DocumentationFile>bin\Release\netcoreapp1.1\.xml</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="stylecop.json" />
+  </PropertyGroup>  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)' == 'netcoreapp1.1' ">
+    <DocumentationFile>bin\Release\net40\.xml</DocumentationFile>
+  </PropertyGroup>  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
+      <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">
+      <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+      <PackageReference Include="System.Data.Common" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
 </Project>
