@@ -68,7 +68,7 @@ namespace Jaguar.Reporting
 
                 // Asignar el área de trabajo del reporte. Su carpeta.
                 var report = ParseReport(jsonData);
-                report.WorkDirectory = Path.Combine(this.HomeDirectory, report.Name);
+                report.WorkDirectory = Path.GetDirectoryName(fileName);
 
                 // Agregar a la lista.
                 reportList.Add(report);
