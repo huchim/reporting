@@ -101,10 +101,23 @@ namespace Jaguar.Reporting
         /// <returns>Resultado de la operación.</returns>
         public byte[] GetBytes(Guid type)
         {
+            var generator = this.generators.Single(x => x.Id == type);
+
             // Obtener los datos de la base de datos.
             var data = this.GenerateData();
 
-            var generator = this.generators.Single(x => x.Id == type);
+            return generator.GetAllBytes(this.ActiveReport, data, this.Variables);
+        }
+
+        /// <summary>
+        /// Devuelve el resultado de la operación de acuerdo al tipo de reporte.
+        /// </summary>
+        /// <param name="generator">Generador de reportes.</param>
+        /// <returns>Resultado de la operación.</returns>
+        public byte[] GetBytes(IGeneratorEngine generator)
+        {
+            // Obtener los datos de la base de datos.
+            var data = this.GenerateData();
 
             return generator.GetAllBytes(this.ActiveReport, data, this.Variables);
         }
@@ -284,7 +297,20 @@ namespace Jaguar.Reporting
 
             return generator.GetString(this.ActiveReport, data, this.Variables);
         }
-        
+
+        /// <summary>
+        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
+        /// </summary>
+        /// <param name="generator">Generador de reportes.</param>
+        /// <returns>Secuencia de los resultados del reporte.</returns>
+        public string GetString(IGeneratorEngine generator)
+        {
+            // Obtener los datos de la base de datos.
+            var data = this.GenerateData();
+
+            return generator.GetString(this.ActiveReport, data, this.Variables);
+        }
+
         /// <summary>
         /// Devuelve el resultado de la operación de acuerdo al tipo de reporte e incluye información sobre el archivo.
         /// </summary>
