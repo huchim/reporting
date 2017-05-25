@@ -493,9 +493,10 @@ namespace Jaguar.Reporting
             {
                 throw new Exception($"No se pudo recuperar la información del archivo {fileName}", ex);
             }
+
             try
             {
-                var reportInfo = ReportRepository.ParseReport(fileName);
+                var reportInfo = ReportRepository.ParseReport(fileContent);
                 reportInfo.WorkDirectory = Path.GetDirectoryName(fileName);
 
                 return reportInfo;
