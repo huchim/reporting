@@ -375,53 +375,75 @@ namespace Jaguar.Reporting
             this.CheckConnection();
             var dataTable = new DataTable(tableName);
 
-            // Ejecutar la consulta.
-            using (var cmd = this.connection.CreateCommand())
+            try
             {
-                cmd.CommandText = sql;
-
-                foreach (var argument in reportArguments)
+                // Ejecutar la consulta.
+                using (var cmd = this.connection.CreateCommand())
                 {
-                    // Crear el parámetro.
-                    var parameterInfo = cmd.CreateParameter();
+                    cmd.CommandText = sql;
 
-                    // Asignar el nombre y valor del parámetro.
-                    parameterInfo.ParameterName = $"{this.parameterPreffix}{argument.Name}";
-                    parameterInfo.Value = argument.Value;
-
-                    cmd.Parameters.Add(parameterInfo);
-                }
-
-                using (var ds = cmd.ExecuteReader(SystemData.CommandBehavior.Default))
-                {
-                    if (ds != null)
+                    try
                     {
-                        while (ds.Read())
+                        foreach (var argument in reportArguments)
                         {
-                            if (dataTable.Columns.Count == 0)
-                            {
-                                // Agregar la lista de columnas.
-                                for (var ci = 0; ci < ds.FieldCount; ci++)
-                                {
-                                    dataTable.Columns.Add(new DataColumn(ds.GetName(ci), ds.GetFieldType(ci)));
-                                }
-                            }
+                            // Crear el parámetro.
+                            var parameterInfo = cmd.CreateParameter();
 
-                            // Crear la fila.
-                            var dataRow = new DataRow();
+                            // Asignar el nombre y valor del parámetro.
+                            parameterInfo.ParameterName = $"{this.parameterPreffix}{argument.Name}";
+                            parameterInfo.Value = argument.Value;
 
-                            // Agregar datos a la fila.
-                            for (var i = 0; i < ds.FieldCount; i++)
-                            {
-                                dataRow.Add(ds.GetName(i), ds.GetValue(i), ds.GetFieldType(i));
-                            }
-
-                            // Agregar la fila a la tabla.
-                            dataTable.Add(dataRow);
+                            cmd.Parameters.Add(parameterInfo);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        throw new DbException("No se puede crear la lista de parámetros.", ex);
+                    }
+
+                    try
+                    {
+                        using (var ds = cmd.ExecuteReader(SystemData.CommandBehavior.Default))
+                        {
+                            if (ds != null)
+                            {
+                                while (ds.Read())
+                                {
+                                    if (dataTable.Columns.Count == 0)
+                                    {
+                                        // Agregar la lista de columnas.
+                                        for (var ci = 0; ci < ds.FieldCount; ci++)
+                                        {
+                                            dataTable.Columns.Add(new DataColumn(ds.GetName(ci), ds.GetFieldType(ci)));
+                                        }
+                                    }
+
+                                    // Crear la fila.
+                                    var dataRow = new DataRow();
+
+                                    // Agregar datos a la fila.
+                                    for (var i = 0; i < ds.FieldCount; i++)
+                                    {
+                                        dataRow.Add(ds.GetName(i), ds.GetValue(i), ds.GetFieldType(i));
+                                    }
+
+                                    // Agregar la fila a la tabla.
+                                    dataTable.Add(dataRow);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new DbException("No se pudo ejecutar la consulta", ex);
+                    }                    
                 }
             }
+            catch (Exception ex)
+            {
+                throw new DbException("No se pudo crear el comando de la conexión.", ex);
+            }
+            
 
             return dataTable;
         }
