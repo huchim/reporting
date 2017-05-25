@@ -153,8 +153,18 @@ namespace Jaguar.Reporting
         /// <returns>Secuencia de los resultados del reporte.</returns>
         public string GetString(IGeneratorEngine generator)
         {
+            if (generator == null)
+            {
+                throw new ArgumentNullException("generator");
+            }
+
             // Obtener los datos de la base de datos.
             var data = this.GenerateData();
+
+            if (data == null)
+            {
+                throw new DbException("Ocurrió un error al obtener los datos.");
+            }
 
             return generator.GetString(this.ActiveReport, data, this.Variables);
         }
@@ -225,88 +235,118 @@ namespace Jaguar.Reporting
             // Activa el reporte.
             this.ActiveReport = report;
 
-            // Configurar la información del reporte.
-            this.ConfigureReportVariable("report.name", this.ActiveReport.Name);
-            this.ConfigureReportVariable("report.label", this.ActiveReport.Label);
-            this.ConfigureReportVariable("report.home", this.ActiveReport.Homepage);
-            this.ConfigureReportVariable("report.description", this.ActiveReport.Description);
-            this.ConfigureReportVariable("report.version", this.ActiveReport.Version);
-
-            // Modificar el SQL en base a las sustituciones presentes.
-            foreach (var sqlCommand in this.ActiveReport.Sql)
+            try
             {
-                // Cargar el SQL del archivo en la variable Script cuando sea necesario.
-                if (!string.IsNullOrEmpty(sqlCommand.FileName))
-                {
-                    // Buscar archivo.
-                    var fileName = Path.Combine(this.ActiveReport.WorkDirectory, sqlCommand.FileName);
+                // Configurar la información del reporte.
+                this.ConfigureReportVariable("report.name", this.ActiveReport.Name);
+                this.ConfigureReportVariable("report.label", this.ActiveReport.Label);
+                this.ConfigureReportVariable("report.home", this.ActiveReport.Homepage);
+                this.ConfigureReportVariable("report.description", this.ActiveReport.Description);
+                this.ConfigureReportVariable("report.version", this.ActiveReport.Version);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo establecer algunas variables del reporte.", ex);
+            }
 
-                    if (File.Exists(fileName))
+            try
+            {
+                // Modificar el SQL en base a las sustituciones presentes.
+                foreach (var sqlCommand in this.ActiveReport.Sql)
+                {
+                    // Cargar el SQL del archivo en la variable Script cuando sea necesario.
+                    if (!string.IsNullOrEmpty(sqlCommand.FileName))
                     {
-                        sqlCommand.Script = File.ReadAllText(fileName);
-                    }
-                }
+                        // Buscar archivo.
+                        var fileName = Path.Combine(this.ActiveReport.WorkDirectory, sqlCommand.FileName);
 
-                if (sqlCommand.Tokens == null)
-                {
-                    break;
-                }
-
-                foreach (var token in sqlCommand.Tokens)
-                {
-                    // Verificar si se encuentra en la lista de argumentos.
-                    var requiredArgs = token.RequiredArguments;
-                    var enableToken = this.Variables.Count(x => requiredArgs.Contains(x.Key.Replace("args.", string.Empty))) == requiredArgs.Count();
-
-                    if (enableToken)
-                    {
-                        // Los campos para efectuar la sustitución se encuentran presentes, así que modificaré el SQL.
-                        sqlCommand.Script = sqlCommand.Script.Replace($"%{token.Key}%", token.Script);
-
-                        // Obligar a que esos campos sean agregados a la consulta como parámetros en caso de no encontrarse ya.
-                        var requiredArgumentsUpdated = sqlCommand.RequiredArguments.ToList();
-                        var argumentsNotFound = token.RequiredArguments.Except(requiredArgumentsUpdated).ToList();
-
-                        if (argumentsNotFound.Count() > 0)
+                        if (File.Exists(fileName))
                         {
-                            // Agregar a la lista los elementos nuevos.
-                            requiredArgumentsUpdated.AddRange(argumentsNotFound);
-
-                            // Asignar nuevamente la lista de argumentos actualizada.
-                            sqlCommand.RequiredArguments = requiredArgumentsUpdated.ToArray();
+                            sqlCommand.Script = File.ReadAllText(fileName);
+                        }
+                        else
+                        {
+                            throw new DbException(
+                                string.Format(
+                                    "No se pudo encontrar el archivo {0} al que se hace referencia en {1}",
+                                    fileName,
+                                    sqlCommand.Name
+                                ));
                         }
                     }
-                    else
+
+                    if (sqlCommand.Tokens == null)
                     {
-                        // Modificaré el SQL para evitar que el token lo invalide.
-                        sqlCommand.Script = sqlCommand.Script.Replace($"%{token.Key}%", string.Empty);
+                        break;
+                    }
+
+                    foreach (var token in sqlCommand.Tokens)
+                    {
+                        // Verificar si se encuentra en la lista de argumentos.
+                        var requiredArgs = token.RequiredArguments;
+                        var enableToken = this.Variables.Count(x => requiredArgs.Contains(x.Key.Replace("args.", string.Empty))) == requiredArgs.Count();
+
+                        if (enableToken)
+                        {
+                            // Los campos para efectuar la sustitución se encuentran presentes, así que modificaré el SQL.
+                            sqlCommand.Script = sqlCommand.Script.Replace($"%{token.Key}%", token.Script);
+
+                            // Obligar a que esos campos sean agregados a la consulta como parámetros en caso de no encontrarse ya.
+                            var requiredArgumentsUpdated = sqlCommand.RequiredArguments.ToList();
+                            var argumentsNotFound = token.RequiredArguments.Except(requiredArgumentsUpdated).ToList();
+
+                            if (argumentsNotFound.Count() > 0)
+                            {
+                                // Agregar a la lista los elementos nuevos.
+                                requiredArgumentsUpdated.AddRange(argumentsNotFound);
+
+                                // Asignar nuevamente la lista de argumentos actualizada.
+                                sqlCommand.RequiredArguments = requiredArgumentsUpdated.ToArray();
+                            }
+                        }
+                        else
+                        {
+                            // Modificaré el SQL para evitar que el token lo invalide.
+                            sqlCommand.Script = sqlCommand.Script.Replace($"%{token.Key}%", string.Empty);
+                        }
                     }
                 }
             }
-
-            // Configura los parámetros requeridos en caso de no existir.
-            foreach (var x in this.ActiveReport.ArgumentList)
+            catch (Exception ex)
             {
-                // Si el valor no ha sido asignado aún.
-                if (x.Value == null)
+                throw new Exception("No se pudo analizar el SQL del reporte.", ex);
+            }
+
+            try
+            {
+                // Configura los parámetros requeridos en caso de no existir.
+                foreach (var x in this.ActiveReport.ArgumentList)
                 {
-                    // Recuperar la variable que sea requerida.
-                    var variable = this.Variables.FirstOrDefault(c => c.Key == $"args.{x.Name}");
-
-                    // Recuperar el valor predeterminado una vez que ha sido sustituído en caso
-                    // de contener variables de sistema.
-                    var m = this.ReplaceVariable(x.DefaultValue);
-
-                    // La variable no fue pasada. Intentaré asignar el valor predeterminado.
-                    if (variable.Key == null)
+                    // Si el valor no ha sido asignado aún.
+                    if (x.Value == null)
                     {
-                        x.TryCastValue(m);
-                    }
-                    else
-                    {
-                        x.TryCastValue(variable.Value);
+                        // Recuperar la variable que sea requerida.
+                        var variable = this.Variables.FirstOrDefault(c => c.Key == $"args.{x.Name}");
+
+                        // Recuperar el valor predeterminado una vez que ha sido sustituído en caso
+                        // de contener variables de sistema.
+                        var m = this.ReplaceVariable(x.DefaultValue);
+
+                        // La variable no fue pasada. Intentaré asignar el valor predeterminado.
+                        if (variable.Key == null)
+                        {
+                            x.TryCastValue(m);
+                        }
+                        else
+                        {
+                            x.TryCastValue(variable.Value);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo generar la lista de argumentos del report.",ex);
             }
         }
 
@@ -375,75 +415,67 @@ namespace Jaguar.Reporting
             this.CheckConnection();
             var dataTable = new DataTable(tableName);
 
-            try
+            using (var cmd = this.connection.CreateCommand())
             {
-                // Ejecutar la consulta.
-                using (var cmd = this.connection.CreateCommand())
+                cmd.CommandText = sql;
+
+                try
                 {
-                    cmd.CommandText = sql;
-
-                    try
+                    foreach (var argument in reportArguments)
                     {
-                        foreach (var argument in reportArguments)
-                        {
-                            // Crear el parámetro.
-                            var parameterInfo = cmd.CreateParameter();
+                        // Crear el parámetro.
+                        var parameterInfo = cmd.CreateParameter();
 
-                            // Asignar el nombre y valor del parámetro.
-                            parameterInfo.ParameterName = $"{this.parameterPreffix}{argument.Name}";
-                            parameterInfo.Value = argument.Value;
+                        // Asignar el nombre y valor del parámetro.
+                        parameterInfo.ParameterName = $"{this.parameterPreffix}{argument.Name}";
+                        parameterInfo.Value = argument.Value;
 
-                            cmd.Parameters.Add(parameterInfo);
-                        }
+                        cmd.Parameters.Add(parameterInfo);
                     }
-                    catch (Exception ex)
-                    {
-                        throw new DbException("No se puede crear la lista de parámetros.", ex);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new DbException("No se puede crear la lista de parámetros.", ex);
+                }
 
-                    try
+                try
+                {
+                    using (var ds = cmd.ExecuteReader(SystemData.CommandBehavior.Default))
                     {
-                        using (var ds = cmd.ExecuteReader(SystemData.CommandBehavior.Default))
+                        if (ds != null)
                         {
-                            if (ds != null)
+                            while (ds.Read())
                             {
-                                while (ds.Read())
+                                if (dataTable.Columns.Count == 0)
                                 {
-                                    if (dataTable.Columns.Count == 0)
+                                    // Agregar la lista de columnas.
+                                    for (var ci = 0; ci < ds.FieldCount; ci++)
                                     {
-                                        // Agregar la lista de columnas.
-                                        for (var ci = 0; ci < ds.FieldCount; ci++)
-                                        {
-                                            dataTable.Columns.Add(new DataColumn(ds.GetName(ci), ds.GetFieldType(ci)));
-                                        }
+                                        dataTable.Columns.Add(new DataColumn(ds.GetName(ci), ds.GetFieldType(ci)));
                                     }
-
-                                    // Crear la fila.
-                                    var dataRow = new DataRow();
-
-                                    // Agregar datos a la fila.
-                                    for (var i = 0; i < ds.FieldCount; i++)
-                                    {
-                                        dataRow.Add(ds.GetName(i), ds.GetValue(i), ds.GetFieldType(i));
-                                    }
-
-                                    // Agregar la fila a la tabla.
-                                    dataTable.Add(dataRow);
                                 }
+
+                                // Crear la fila.
+                                var dataRow = new DataRow();
+
+                                // Agregar datos a la fila.
+                                for (var i = 0; i < ds.FieldCount; i++)
+                                {
+                                    dataRow.Add(ds.GetName(i), ds.GetValue(i), ds.GetFieldType(i));
+                                }
+
+                                // Agregar la fila a la tabla.
+                                dataTable.Add(dataRow);
                             }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        throw new DbException("No se pudo ejecutar la consulta", ex);
-                    }                    
+                }
+                catch (Exception ex)
+                {
+                    throw new DbException(string.Format("No se pudo ejecutar la consulta: {0}", cmd.CommandText), ex);
                 }
             }
-            catch (Exception ex)
-            {
-                throw new DbException("No se pudo crear el comando de la conexión.", ex);
-            }
-            
+
 
             return dataTable;
         }
