@@ -483,12 +483,29 @@ namespace Jaguar.Reporting
         private ReportHandler GetFromFile(string fileName)
         {
             // Analizar archivo.
-            var fileContent = ReportRepository.LoadJsonData(fileName);
-            var reportInfo = ReportRepository.ParseReport(fileName);
-            reportInfo.WorkDirectory = Path.GetDirectoryName(fileName);
+            var fileContent = "";
 
-            return reportInfo;
+            try
+            {
+                fileContent = ReportRepository.LoadJsonData(fileName);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"No se pudo recuperar la información del archivo {fileName}", ex);
+            }
+            try
+            {
+                var reportInfo = ReportRepository.ParseReport(fileName);
+                reportInfo.WorkDirectory = Path.GetDirectoryName(fileName);
+
+                return reportInfo;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo analizar correctamente el JSON", ex);
+            }
         }
+
         /// <summary>
         /// Devuelve una cadena con los valores sustituídos que vienen de las variables.
         /// </summary>
