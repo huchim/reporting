@@ -64,10 +64,10 @@ namespace Jaguar.Reporting
             foreach (var fileName in allFiles)
             {
                 // Recuperar el contenido del archivo.
-                var jsonData = this.LoadJsonData(fileName);
+                var jsonData = LoadJsonData(fileName);
 
                 // Asignar el área de trabajo del reporte. Su carpeta.
-                var report = this.ParseReport(jsonData);
+                var report = ParseReport(jsonData);
                 report.WorkDirectory = Path.Combine(this.HomeDirectory, report.Name);
 
                 // Agregar a la lista.
@@ -77,12 +77,12 @@ namespace Jaguar.Reporting
             this.Reports = reportList.ToArray();
         }
 
-        private string LoadJsonData(string fileName)
+        internal static string LoadJsonData(string fileName)
         {
             return File.ReadAllText(fileName);
         }
 
-        private ReportHandler ParseReport(string reportData)
+        internal static ReportHandler ParseReport(string reportData)
         {
             return JsonConvert.DeserializeObject<ReportHandler>(reportData);
         }
