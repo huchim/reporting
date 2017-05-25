@@ -132,6 +132,53 @@ namespace Jaguar.Reporting
         }
 
         /// <summary>
+        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
+        /// </summary>
+        /// <param name="type">Identificador del tipo de generador.</param>
+        /// <returns>Secuencia de los resultados del reporte.</returns>
+        public string GetString(Guid type)
+        {
+            var generator = this.generators.Single(x => x.Id == type);
+
+            // Obtener los datos de la base de datos.
+            var data = this.GenerateData();
+
+            return generator.GetString(this.ActiveReport, data, this.Variables);
+        }
+
+        /// <summary>
+        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
+        /// </summary>
+        /// <param name="generator">Generador de reportes.</param>
+        /// <returns>Secuencia de los resultados del reporte.</returns>
+        public string GetString(IGeneratorEngine generator)
+        {
+            // Obtener los datos de la base de datos.
+            var data = this.GenerateData();
+
+            return generator.GetString(this.ActiveReport, data, this.Variables);
+        }
+
+        /// <summary>
+        /// Configura un reporte como el reporte activo e inicializa los argumentos.
+        /// </summary>
+        /// <param name="reportFile">Archivo de reporte.</param>
+        /// <param name="arguments">Inicializa los argumentos con los valores.</param>
+        public void Open(string reportFile, Dictionary<string, object> arguments)
+        {
+            this.Open(this.GetFromFile(reportFile), arguments);
+        }
+
+        /// <summary>
+        /// Configura un reporte como el reporte activo e inicializa los argumentos.
+        /// </summary>
+        /// <param name="reportFile">Archivo de reporte.</param>
+        public void Open(string reportFile)
+        {
+            this.Open(this.GetFromFile(reportFile));
+        }
+
+        /// <summary>
         /// Configura un reporte como el reporte activo e inicializa los argumentos.
         /// </summary>
         /// <param name="report">Información del reporte.</param>
@@ -284,34 +331,6 @@ namespace Jaguar.Reporting
         }
 
         /// <summary>
-        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
-        /// </summary>
-        /// <param name="type">Identificador del tipo de generador.</param>
-        /// <returns>Secuencia de los resultados del reporte.</returns>
-        public string GetString(Guid type)
-        {
-            var generator = this.generators.Single(x => x.Id == type);
-
-            // Obtener los datos de la base de datos.
-            var data = this.GenerateData();
-
-            return generator.GetString(this.ActiveReport, data, this.Variables);
-        }
-
-        /// <summary>
-        /// Obtiene los resultados de la operación de acuerdo al tipo de reporte.
-        /// </summary>
-        /// <param name="generator">Generador de reportes.</param>
-        /// <returns>Secuencia de los resultados del reporte.</returns>
-        public string GetString(IGeneratorEngine generator)
-        {
-            // Obtener los datos de la base de datos.
-            var data = this.GenerateData();
-
-            return generator.GetString(this.ActiveReport, data, this.Variables);
-        }
-
-        /// <summary>
         /// Devuelve el resultado de la operación de acuerdo al tipo de reporte e incluye información sobre el archivo.
         /// </summary>
         /// <param name="type">Identificador del tipo de generador.</param>
@@ -349,6 +368,7 @@ namespace Jaguar.Reporting
                 this.Variables.Add(name, value);
             }
         }
+
         private DataTable GetDataTable(string tableName, string sql, ReportArgumentItem[] reportArguments)
         {
             // Asegurarse que la conexión está abierta y se puede ejecutar la consulta.
@@ -406,6 +426,15 @@ namespace Jaguar.Reporting
             return dataTable;
         }
 
+        private ReportHandler GetFromFile(string fileName)
+        {
+            // Analizar archivo.
+            var fileContent = ReportRepository.LoadJsonData(fileName);
+            var reportInfo = ReportRepository.ParseReport(fileName);
+            reportInfo.WorkDirectory = Path.GetDirectoryName(fileName);
+
+            return reportInfo;
+        }
         /// <summary>
         /// Devuelve una cadena con los valores sustituídos que vienen de las variables.
         /// </summary>
